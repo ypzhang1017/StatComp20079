@@ -1,0 +1,136 @@
+---
+title: "Introduction to StatComp20079"
+author: "Yueping Zhang"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to StatComp20079}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Overview
+
+__StatComp20079__ is a simple R package developed to To record the functions that need to be written during the research process and the existing methods in the papers to achieve reading (implemented through the R package _StatComp20079_) for the 'Statistical Computing' course. Two functions are considered, namely, _Lagrange_ (to approximate an unknown function) and _FCM_ (Fuzzy cluster analysis of data).
+
+
+## Lagrange interpolation
+
+The source R code for _Lagrange_ is as follows:
+```{r,eval=FALSE}
+Lagrange<-function(x,X,Y){
+  #x为缺失值y对应的x值
+  #Y为已知的所有y值组成的向量
+  #X为Y向量对应的x值向量
+  n<-length(X) #节点的个数
+  lagr<-0 #插值多项式的初始值
+  if(length(X)!=length(Y))
+    stop("input error,the length of input values X and Y should be equal")
+  if(n<2)
+    stop("the length of X and Y should be bigger than 1")
+  for(i in 1:n)
+  {
+    li<-1
+    for(j in 1:n)
+    {
+      if(i!=j)
+        li<-li*(x-X[j])/(X[i]-X[j])
+    }
+    lagr<-li*Y[i]+lagr
+  }
+  return(lagr)
+}
+```
+
+## FCM(Fuzzy clustering algorithm)
+
+The source R code for _FCM_ is as follows:
+
+```{r,eval=FALSE}
+FCM <- function(dat, k){
+  m <- 2
+  iter.max <- 1000
+  eps <- 1e-06
+  dat <- as.matrix(dat)
+  set.seed(6386)
+  v0 <- dat[sample(nrow(dat), k),] #初始聚类中心
+  
+  n <- nrow(dat)
+  d <- matrix(0, n, k)#初始距离矩阵
+  for (j in 1:k) {
+    d[, j] = sqrt(rowSums(sweep(dat, 2, v0[j, ], "-")^2))#J.i,欧几里得距离
+  }
+  
+  u <- matrix(NA, n, k)#初始隶属矩阵
+  for (j in 1:k){
+    for (i in 1:n){
+      if (any(d[i,] == 0)){
+        u[i, ] <- rep(1/k, k)
+      }else{
+        u[i, j] <- 1/(sum((d[i, j]/d[i, ])^(2/(m - 1))))
+      }
+    }
+  }
+  v <- t(u^m) %*% dat/colSums(u^m)
+  J <- sum(d^2 * (u^m)) #目标函数
+  
+  iter <- 0
+  j.best <- Inf
+  while((iter < iter.max) && (abs(j - j.best) > eps)){
+    j.best <- J
+    for (j in 1:k) {
+      d[, j] = sqrt(rowSums(sweep(dat, 2, v[j, ], "-")^2))
+    }
+    
+    for (j in 1:k){
+      for (i in 1:n){
+        if (any(d[i,] == 0)){
+          u[i, ] <- rep(1/k, k)
+        }else{
+          u[i, j] <- 1/(sum((d[i, j]/d[i, ])^(2/(m - 1))))#更新隶属矩阵
+        }
+      }
+    }
+    v <- t(u^m) %*% dat/colSums(u^m)
+    J <- sum(d^2 * (u^m))
+    iter = iter + 1
+  }
+  cluster_id <-  apply(u, 1, which.max)
+  result <- list()
+  result$u <- u
+  result$v <- v
+  result$cluster_id <- cluster_id
+  return(result)
+}
+```
+
+In order to verify the effect of the _Lagrange_ , input two vectors and observe the approximated function curve . The R code for _Lagrange_ is as follows.
+
+```{r,eval=TRUE}
+library(StatComp20079)
+
+X <- c(-2.15,-1.00,0.01,1.02,2.03,3.25)
+Y <- c(17.03,7.24,1.05,2.03,17.06,23.05)
+f <- function(x)
+  Lagrange(x,X,Y)
+curve(f(x),-2.15,3.25)
+```
+
+The above results show that after knowing certain points of the function, the function curve can be fitted by Lagrangian interpolation.   
+
+
+
+Take the data set iris as an example to show the clustering effect of _FCM_,The source R code is as follows:
+
+
+```{r,eval=FALSE}
+library(StatComp20079)
+data(iris)
+dat <- iris[,2:4]
+result <- FCM(dat,3)
+plot(iris$Sepal.Width,iris$Petal.Width,col=result$cluster_id,main="模糊聚类结果可视化",pch=19)
+
+```
+
+From the above figure, the data set can be clearly divided into 3 categories.
+

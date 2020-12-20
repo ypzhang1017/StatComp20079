@@ -1,0 +1,18 @@
+Package: StatComp20079
+Type: Package
+Title:  Custom functions for 'Statistical Computing' course
+Version: 1.0
+Date: 2020-12-20
+Author: Yueping Zhang
+Maintainer: Yueping Zhang <zhangyuepingwa@163.com>
+Description: Lagrangian interpolation function and fuzzy cluster analysis.
+License: GPL (>= 2)
+Imports: Rcpp (>= 0.12.16), microbenchmark, MASS, bootstrap, boot, DAAG,
+        RANN, energy, Ball, knitr, rmarkdown
+ImportFrom:stats,rnorm
+LinkingTo: Rcpp
+RoxygenNote: 7.1.1
+Encoding: UTF-8
+VignetteBuilder: knitr
+URL: http://github.com/ypzhang1017/StatComp20079
+BugReports: http://github.com/ypzhang1017/StatComp20079/issues
